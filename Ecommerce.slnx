@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Aspire/">
+    <Project Path="Aspire/Ecommerce.AppHost/Ecommerce.AppHost.csproj" Id="6c2f7cfd-a8a9-42a0-bcc1-5c0e270a6ebf" />
+  </Folder>
   <Folder Name="/Services/" />
   <Folder Name="/Services/Catalog/">
     <Project Path="Services/Catalog/Catalog.API/Catalog.API.csproj" Id="d0e2ce63-b552-4b36-a249-e6fbb66e2deb" />

@@ -1,12 +1,7 @@
 ﻿using Catalog.Application.Abstractions;
 using Catalog.Application.Common.Outbox;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Catalog.Infrastructure.Persistence.Mongo.Repositories
+namespace Catalog.Infrastructure.Persistence.Repositories
 {
     public class OutboxRepository : IOutboxRepository
     {

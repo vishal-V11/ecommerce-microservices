@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Catalog.Domain.Entities;
 
 namespace Catalog.Application.Abstractions
 {
     public interface IBrandRepository
     {
-        
+        Task<Brand?> GetByIdAsync(Guid id, CancellationToken ct);
     }
 }

@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Catalog.Application.Common.Responses;
+using MediatR;
 
 namespace Catalog.Application.Features.Products.Commands.UpdateProduct
 {
-    public class UpdateProductCommand
-    {
-    }
+    public sealed record UpdateProductCommand(
+        Guid ProductId,
+        string Name,
+        string? Description,
+        decimal Price,
+        Guid BrandId,
+        Guid CategoryId,
+        string ImagePath
+    ) : IRequest<Result>;
 }

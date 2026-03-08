@@ -28,4 +28,30 @@
                 Message = message
             };
     }
+
+    public sealed class Result
+    {
+        public bool IsSuccess { get; init; }
+
+        public string? Message { get; init; }
+
+        public List<string>? Errors { get; init; }
+
+        private Result() { }
+
+        public static Result Success(string? message = null)
+            => new Result
+            {
+                IsSuccess = true,
+                Message = message
+            };
+
+        public static Result Failure(List<string> errors, string? message = null)
+            => new Result
+            {
+                IsSuccess = false,
+                Errors = errors,
+                Message = message
+            };
+    }
 }

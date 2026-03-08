@@ -3,6 +3,7 @@ using Catalog.Infrastructure.Background;
 using Catalog.Infrastructure.Persistence.Mongo;
 using Catalog.Infrastructure.Persistence.Mongo.DbSeeder;
 using Catalog.Infrastructure.Persistence.Mongo.Repositories;
+using Catalog.Infrastructure.Persistence.Repositories;
 using Catalog.Infrastructure.Services;
 using Catalog.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,8 +25,10 @@ namespace Catalog.Infrastructure
             services.AddScoped<ICacheService, RedisCacheService>();
 
             services.AddSingleton<MongoContext>();
+            services.AddScoped<MongoSessionAccessor>();
 
             services.AddScoped<DatabaseSeeder>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IOutboxRepository, OutboxRepository>();
 

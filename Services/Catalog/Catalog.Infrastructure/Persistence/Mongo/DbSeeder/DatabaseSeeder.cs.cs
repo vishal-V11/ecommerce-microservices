@@ -1,11 +1,6 @@
 ﻿using Catalog.Infrastructure.Persistence.Mongo.Collections;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Catalog.Infrastructure.Persistence.Mongo.DbSeeder
 {
@@ -37,9 +32,9 @@ namespace Catalog.Infrastructure.Persistence.Mongo.DbSeeder
 
             var brands = new[]
             {
-                new BrandDocument { BrandId = Guid.NewGuid(), Name = "Apple" },
-                new BrandDocument { BrandId = Guid.NewGuid(), Name = "Samsung" },
-                new BrandDocument { BrandId = Guid.NewGuid(), Name = "Sony" }
+                new BrandDocument { Id = Guid.NewGuid(), Name = "Apple",IsDeleted = false },
+                new BrandDocument { Id = Guid.NewGuid(), Name = "Samsung",IsDeleted = false },
+                new BrandDocument { Id = Guid.NewGuid(), Name = "Sony" ,IsDeleted = false}
             };
 
             await _context.Brands.InsertManyAsync(brands);
@@ -56,9 +51,9 @@ namespace Catalog.Infrastructure.Persistence.Mongo.DbSeeder
 
             var categories = new[]
             {
-            new CategoryDocument { CategoryId = Guid.NewGuid(), Name = "Mobiles" },
-            new CategoryDocument { CategoryId = Guid.NewGuid(), Name = "Electronics" },
-            new CategoryDocument { CategoryId = Guid.NewGuid(), Name = "Accessories" }
+            new CategoryDocument { Id = Guid.NewGuid(), Name = "Mobiles",IsDeleted = false },
+            new CategoryDocument { Id = Guid.NewGuid(), Name = "Electronics",IsDeleted = false },
+            new CategoryDocument { Id = Guid.NewGuid(), Name = "Accessories",IsDeleted = false }
         };
 
             await _context.Categories.InsertManyAsync(categories);

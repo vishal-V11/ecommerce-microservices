@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Catalog.Application.IntegrationEvents
+﻿namespace Catalog.Application.IntegrationEvents
 {
-    public class ProductCreatedIntegrationEvent
-    {
-
-    }
+    public sealed record ProductCreatedIntegrationEvent(
+        Guid ProductId,
+        Guid BrandId,
+        Guid CategoryId,
+        string Name,
+        decimal Price
+    );
 }

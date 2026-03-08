@@ -115,8 +115,7 @@ try
 
     app.UseAuthorization();
 
-    app.UseMiddleware<CorrelationIdMiddleware>();
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.UseCustomMiddleware();
 
     app.MapControllers();
 

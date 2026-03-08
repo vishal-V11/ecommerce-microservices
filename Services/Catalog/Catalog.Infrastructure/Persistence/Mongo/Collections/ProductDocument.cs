@@ -1,10 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Catalog.Infrastructure.Persistence.Mongo.Collections
 {
@@ -12,18 +7,32 @@ namespace Catalog.Infrastructure.Persistence.Mongo.Collections
     {
         public required string Name { get; set; }
         public string Description { get; set; }
-        public required BrandDocument Brand {  get; set; }
-        public required CategoryDocument Category { get; set; }
+        public required BrandSnapshot Brand {  get; set; }
+        public required CategorySnapshot Category { get; set; }
 
         [BsonRepresentation(BsonType.Decimal128)]
         public decimal Price { get; set; }
-        public List<ProductImage> Images { get; set; } = new();
+        public string ImageUrl { get; set; } 
+        public bool IsActive { get; set; }
 
     }
 
-    public sealed class ProductImage
+    public sealed class ProductImageDocument
     {
+        public Guid Id { get;set;  }
         public string Url { get; set; } = default!;
         public int SortOrder { get; set; }
+    }
+
+    public sealed class BrandSnapshot
+    {
+        public Guid Id { get; set; }
+        public required string Name { get; set; }
+    }
+
+    public sealed class CategorySnapshot
+    {
+        public Guid Id { get; set; }
+        public required string Name { get; set; }
     }
 }

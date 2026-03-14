@@ -1,18 +1,13 @@
-using Catalog.API.Authentication;
-using Catalog.API.Context;
-using Catalog.API.Middleware;
-using Catalog.API.Settings;
-using Catalog.Application;
-using Catalog.Application.Abstractions;
-using Catalog.Infrastructure;
-using Catalog.Infrastructure.Messaging.Producers.Kafka;
-using Catalog.Infrastructure.Persistence.Mongo.DbSeeder;
-using Catalog.Infrastructure.Settings;
+using Cart.API.Context;
+using Cart.API.Middleware;
+using Cart.Application;
+using Cart.Application.Abstractions;
+using Cart.Infrastructure;
+using Cart.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
-
 
 //Setting the Logger configurations
 Log.Logger = new LoggerConfiguration()
@@ -26,8 +21,6 @@ Log.Logger = new LoggerConfiguration()
 try
 {
 
-
-
     var builder = WebApplication.CreateBuilder(args);
 
     // Add services to the container.
@@ -38,13 +31,11 @@ try
     builder.Services.AddSwaggerGen();
 
 
-    var connectionString = builder.Configuration.GetConnectionString("mongo");
-    builder.Services.Configure<MongoSettings>(
-        builder.Configuration.GetSection("Mongo"));
+    //Add Application
+    builder.Services.AddApplication();
 
-    //Jwt Settings Configure
-    builder.Services.Configure<JwtSettings>(
-        builder.Configuration.GetSection("Jwt"));
+    //Add Infrastructure
+    builder.Services.AddInfraStructure();
 
     //Redis Configuration
     builder.Services.Configure<RedisSettings>(options =>
@@ -53,26 +44,11 @@ try
             builder.Configuration.GetConnectionString("redis")!;
     });
 
-    builder.Services.Configure<KafkaSettings>(options =>
-    {
-        options.BootstrapServers =
-            builder.Configuration.GetConnectionString("kafka")!;
-    });
-
-    //Application Dependency
-    builder.Services.AddApplication();
-
-    //Infrastructure Dependency
-    builder.Services.AddInfrastructure();
-
-
-
-    //Jwt Authentication setup 
+    //Add Authentication
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
-            options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -80,12 +56,13 @@ try
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
 
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Audience"],
-
+                ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+                ValidAudience = builder.Configuration["JwtSettings:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(
-                        builder.Configuration["Jwt:Secret"]!))
+                        builder.Configuration["JwtSettings:SecretKey"]!
+                        )
+                    )
             };
         });
 
@@ -97,14 +74,6 @@ try
 
     var app = builder.Build();
 
-
-    //Add the temporary seed data for our App
-    using (var scope = app.Services.CreateScope())
-    {
-        var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-        await seeder.SeedAsync();
-    }
-
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
@@ -113,6 +82,7 @@ try
     }
 
     app.UseHttpsRedirection();
+    app.UseAuthentication();
 
     app.UseAuthorization();
 
@@ -122,11 +92,12 @@ try
 
     app.Run();
 }
-catch (Exception ex)
+catch(Exception ex) 
 {
-    Log.Fatal(ex, "Catalog Service terminated unexpectedly");
+        Log.Fatal(ex, "Catalog Service terminated unexpectedly");
 }
 finally
 {
     await Log.CloseAndFlushAsync();
 }
+

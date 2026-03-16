@@ -12,10 +12,16 @@
   <Folder Name="/Services/Identity/">
     <Project Path="Services/Identity/Identity.Api/Identity.Api.csproj" />
   </Folder>
+  <Folder Name="/Services/Inventory/">
+    <Project Path="Services/Inventory/Inventory.API/Inventory.API.csproj" />
+  </Folder>
   <Folder Name="/Services/ShoppingCart/">
     <Project Path="Services/ShoppingCart/Cart.API/Cart.API.csproj" />
     <Project Path="Services/ShoppingCart/Cart.Application/Cart.Application.csproj" Id="ad13d2b3-b8ee-45e8-a170-e0adbb79b257" />
     <Project Path="Services/ShoppingCart/Cart.Domain/Cart.Domain.csproj" Id="56db7f2b-fd2e-46a1-b387-3e5704903da1" />
     <Project Path="Services/ShoppingCart/Cart.Infrastructure/Cart.Infrastructure.csproj" Id="140b7d3e-bf35-402e-8fc4-eadabcdee15f" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="Shared/Shared.Messaging/Shared.Messaging.csproj" />
   </Folder>
 </Solution>

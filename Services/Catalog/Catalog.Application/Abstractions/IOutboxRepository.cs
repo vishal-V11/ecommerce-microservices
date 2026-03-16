@@ -14,5 +14,10 @@ namespace Catalog.Application.Abstractions
             Guid messageId,
             DateTime processedOnUtc,
             CancellationToken cancellationToken);
+
+        Task RecordFailureAsync(
+            Guid eventId,
+            string error,
+            CancellationToken ct);
     }
 }

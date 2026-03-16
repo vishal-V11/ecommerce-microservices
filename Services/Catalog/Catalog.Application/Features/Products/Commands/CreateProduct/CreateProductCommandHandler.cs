@@ -1,11 +1,11 @@
 ﻿using Catalog.Application.Abstractions;
 using Catalog.Application.Common.Outbox;
 using Catalog.Application.Common.Responses;
-using Catalog.Application.Constants;
 using Catalog.Application.Exceptions;
 using Catalog.Application.IntegrationEvents;
 using Catalog.Domain.Entities;
 using MediatR;
+using Shared.Messaging.Constants;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -66,13 +66,13 @@ namespace Catalog.Application.Features.Products.Commands.CreateProduct
             );
 
             var outboxMessage = new OutboxMessage
-            {
-                EventId = Guid.NewGuid(),
-                Topic = KafkaTopics.ProductCreated,
-                Payload = JsonSerializer.Serialize(integrationEvent),
-                CorrelationId = _correlationContext.CorrelationId,
-                OccurredOnUtc = DateTimeOffset.UtcNow
-            };
+            (
+                Guid.NewGuid(),
+                KafkaTopics.ProductCreated,
+                JsonSerializer.Serialize(integrationEvent),
+                _correlationContext.CorrelationId,
+                DateTimeOffset.UtcNow
+            );
 
             await _unitOfWork.ExecuteAsync(async token =>
             {

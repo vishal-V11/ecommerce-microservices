@@ -10,7 +10,9 @@ namespace Catalog.Application.Abstractions
     {
         Task PublishAsync(
             string topic,
+            string key,
             string payload,
+            IDictionary<string, string>? headers = null,
             CancellationToken cancellationToken = default
         );
     }

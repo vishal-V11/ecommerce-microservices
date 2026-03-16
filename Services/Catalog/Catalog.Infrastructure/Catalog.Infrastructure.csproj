@@ -10,12 +10,14 @@
     <PackageReference Include="Confluent.Kafka" Version="2.13.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Resilience" Version="8.10.0" />
     <PackageReference Include="MongoDB.Bson" Version="3.6.0" />
     <PackageReference Include="MongoDB.Driver" Version="3.6.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.11.8" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shared.Messaging\Shared.Messaging.csproj" />
     <ProjectReference Include="..\Catalog.Application\Catalog.Application.csproj" />
     <ProjectReference Include="..\Catalog.Domain\Catalog.Domain.csproj" />
   </ItemGroup>

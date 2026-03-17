@@ -2,7 +2,7 @@
 {
     public interface IProcessedEventsRepository
     {
-        Task<bool> ExistsAsync(Guid eventId,CancellationToken ct);
-        Task AddAsync(Guid eventId, CancellationToken ct);
+        Task<bool> ExistsAsync(Guid eventId,string eventType,CancellationToken ct);
+        Task AddAsync(Guid eventId,string eventType, CancellationToken ct);
     }
 }

@@ -11,13 +11,13 @@ namespace Inventory.API.Persistence
         {
             _context = context;
         }
-        public async Task<bool> ExistsAsync(Guid eventId, CancellationToken ct)
+        public async Task<bool> ExistsAsync(Guid eventId,string eventType, CancellationToken ct)
         {
-            return await _context.ProcessedEvents.AnyAsync(x=>x.EventId == eventId,ct);
+            return await _context.ProcessedEvents.AnyAsync(x=>x.EventId == eventId && x.EventType == eventType,ct);
         }
-        public async Task AddAsync(Guid eventId, CancellationToken ct)
+        public async Task AddAsync(Guid eventId,string eventType, CancellationToken ct)
         {
-            ProcessedEvent processedEvent = ProcessedEvent.Create(eventId);
+            ProcessedEvent processedEvent = ProcessedEvent.Create(eventId,eventType);
             await _context.ProcessedEvents.AddAsync(processedEvent,ct);
             await _context.SaveChangesAsync(ct);
         }

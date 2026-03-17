@@ -3,9 +3,10 @@ using Inventory.API.Entities;
 using Inventory.API.Events;
 using Inventory.API.Interfaces;
 using Inventory.API.Settings;
-using Messaging.Constants;
+using Shared.Messaging.Constants;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using Inventory.API.Constants;
 
 namespace Inventory.API.Consumers
 {
@@ -98,7 +99,7 @@ namespace Inventory.API.Consumers
                     //-- Idempotency check --
                     //if this event id was already processed (e.g. Kafka replay after crash)
                     // skip processing but still commit so we don't get stuck replaying
-                    var isAlreadyProcessed = await processedEventRepository.ExistsAsync(eventId, ct);
+                    var isAlreadyProcessed = await processedEventRepository.ExistsAsync(eventId,KafkaEventTypes.ProductCreated, ct);
                     if (isAlreadyProcessed)
                     {
                         _logger.LogWarning("EventId {EventId} already processed. Skipping.",eventId);
@@ -122,7 +123,7 @@ namespace Inventory.API.Consumers
                     await inventoryRepository.AddAsync(item, ct);
 
                     // Mark the event as processed to avoid duplication
-                    await processedEventRepository.AddAsync(eventId, ct);
+                    await processedEventRepository.AddAsync(eventId,KafkaEventTypes.ProductCreated, ct);
 
                     _logger.LogInformation(
                     "Inventory item created for ProductId {ProductId}. EventId {EventId}.",

@@ -57,6 +57,10 @@ namespace Inventory.API.Persistence
                 .HasColumnName("event_id")
                 .ValueGeneratedNever();
 
+                builder.Property(x => x.EventType)
+                    .HasColumnName("event_type")
+                    .IsRequired();
+
                 builder.Property(x => x.ProcessedAt)
                 .HasColumnName("processed_at")
                 .IsRequired();

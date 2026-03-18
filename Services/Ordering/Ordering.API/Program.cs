@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Ordering.API.Context;
-using Ordering.Application;
 using Ordering.Application.Abstractions;
-using Ordering.Infrastructure;
+using Ordering.Application.Extensions;
+using Ordering.Infrastructure.Extensions;
 using Ordering.Infrastructure.Settings;
 using System.Text;
 
@@ -72,6 +72,10 @@ builder.Services.AddInfrastructure(dbOptions, kafkaOptions);
 
 
 var app = builder.Build();
+
+// Apply Migrations on Startup — runs pending migrations before app is ready
+await app.Services.MigrateDatabaseAsync();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

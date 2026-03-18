@@ -12,7 +12,7 @@ using Shared.Messaging.Events.Order;
 using Shared.Messaging.Events.Payment;
 using Shared.Messaging.Events.Stock;
 
-namespace Ordering.Infrastructure
+namespace Ordering.Infrastructure.Extensions
 {
     public static class DependencyInjection
     {

@@ -17,4 +17,7 @@ var catalog = builder.AddProject<Projects.Catalog_API>("catalog-api")
 
 builder.AddProject<Projects.Cart_API>("cart-api");
 
+builder.AddProject<Projects.Ordering_API>("ordering-api")
+                    .WithReference(kafka);
+
 builder.Build().Run();

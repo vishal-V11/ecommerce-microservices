@@ -1,4 +1,3 @@
-
 <Solution>
   <Folder Name="/Aspire/">
     <Project Path="Aspire/Ecommerce.AppHost/Ecommerce.AppHost.csproj" Id="6c2f7cfd-a8a9-42a0-bcc1-5c0e270a6ebf" />
@@ -15,6 +14,12 @@
   </Folder>
   <Folder Name="/Services/Inventory/">
     <Project Path="Services/Inventory/Inventory.API/Inventory.API.csproj" />
+  </Folder>
+  <Folder Name="/Services/Ordering/">
+    <Project Path="Services/Ordering/Ordering.API/Ordering.API.csproj" Id="dfee6f84-8410-4598-8438-f4959c43c24b" />
+    <Project Path="Services/Ordering/Ordering.Application/Ordering.Application.csproj" Id="3feb8dbf-5c56-459b-9ba6-aa72a6e25187" />
+    <Project Path="Services/Ordering/Ordering.Domain/Ordering.Domain.csproj" Id="b9609d64-f0e0-49e4-9459-cd1a562ad79f" />
+    <Project Path="Services/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" Id="b7cde482-3e62-4230-9a75-5d6d04292176" />
   </Folder>
   <Folder Name="/Services/ShoppingCart/">
     <Project Path="Services/ShoppingCart/Cart.API/Cart.API.csproj" />

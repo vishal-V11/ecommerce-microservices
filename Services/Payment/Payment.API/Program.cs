@@ -48,7 +48,7 @@ builder.Services.AddHostedService<PaymentProcessRequestedConsumer>();
 var app = builder.Build();
 
 // Auto-migrate on startup
-using (var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
     await db.Database.MigrateAsync();

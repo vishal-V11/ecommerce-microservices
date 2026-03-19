@@ -85,7 +85,7 @@ namespace Payment.API.Consumers
                     {
                         _logger.LogInformation("Payment event received");
 
-                        using var scope = _scopeFactory.CreateScope();
+                        using var scope = _scopeFactory.CreateAsyncScope();
 
                         var repository = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
 
@@ -164,6 +164,8 @@ namespace Payment.API.Consumers
                     _logger.LogError(ex, "Unhandled error processing payment event.");
                 }
             }
+
+            consumer.Close();
         }
     }
 }

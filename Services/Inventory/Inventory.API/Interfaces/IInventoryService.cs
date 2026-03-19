@@ -1,4 +1,5 @@
-﻿using Inventory.API.Entities;
+﻿using Inventory.API.DTO;
+using Inventory.API.Entities;
 
 namespace Inventory.API.Interfaces
 {
@@ -6,9 +7,9 @@ namespace Inventory.API.Interfaces
     {
         Task<InventoryItem> GetByProductIdAsync(Guid productId, CancellationToken ct = default);
         Task AddStockAsync(Guid productId, int qty, CancellationToken ct = default);
-        Task LockStockAsync(Guid productId, int qty, CancellationToken ct = default);
-        Task ReleaseStockAsync(Guid productId, int qty, CancellationToken ct = default);
-        Task ConfirmStockAsync(Guid productId, int qty, CancellationToken ct = default);
         Task CreateInventoryItemAsync(Guid productId, CancellationToken ct = default);
+        Task LockStockBatchAsync(IReadOnlyList<StockItemDto> items, CancellationToken ct = default);
+        Task ConfirmStockBatchAsync(IReadOnlyList<StockItemDto> items, CancellationToken ct = default);
+        Task ReleaseStockBatchAsync(IReadOnlyList<StockItemDto> items, CancellationToken ct = default);
     }
 }

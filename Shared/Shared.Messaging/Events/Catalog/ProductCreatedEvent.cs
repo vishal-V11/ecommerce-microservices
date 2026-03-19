@@ -1,4 +1,4 @@
-﻿namespace Inventory.API.Events
+﻿namespace Shared.Messaging.Events.Catalog
 {
     public sealed record ProductCreatedEvent(
          Guid ProductId,

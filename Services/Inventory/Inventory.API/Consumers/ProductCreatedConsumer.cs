@@ -1,12 +1,11 @@
 ﻿using Confluent.Kafka;
 using Inventory.API.Entities;
-using Inventory.API.Events;
 using Inventory.API.Interfaces;
 using Inventory.API.Settings;
-using Shared.Messaging.Constants;
 using Microsoft.Extensions.Options;
+using Shared.Messaging.Constants;
+using Shared.Messaging.Events.Catalog;
 using System.Text.Json;
-using Inventory.API.Constants;
 
 namespace Inventory.API.Consumers
 {
@@ -89,7 +88,7 @@ namespace Inventory.API.Consumers
 
                     // BackgroundService is a singleton but repositories are scoped
                     // Create a fresh scope per message to resolve scoped services safely
-                    using var scope = _scopeFactory.CreateScope();
+                    using var scope = _scopeFactory.CreateAsyncScope();
                     var inventoryRepository = scope.ServiceProvider
                             .GetRequiredService<IInventoryRepository>();
 
@@ -99,7 +98,7 @@ namespace Inventory.API.Consumers
                     //-- Idempotency check --
                     //if this event id was already processed (e.g. Kafka replay after crash)
                     // skip processing but still commit so we don't get stuck replaying
-                    var isAlreadyProcessed = await processedEventRepository.ExistsAsync(eventId,KafkaEventTypes.ProductCreated, ct);
+                    var isAlreadyProcessed = await processedEventRepository.ExistsAsync(eventId,KafkaTopics.ProductCreated, ct);
                     if (isAlreadyProcessed)
                     {
                         _logger.LogWarning("EventId {EventId} already processed. Skipping.",eventId);
@@ -123,7 +122,7 @@ namespace Inventory.API.Consumers
                     await inventoryRepository.AddAsync(item, ct);
 
                     // Mark the event as processed to avoid duplication
-                    await processedEventRepository.AddAsync(eventId,KafkaEventTypes.ProductCreated, ct);
+                    await processedEventRepository.AddAsync(eventId,KafkaTopics.ProductCreated, ct);
 
                     _logger.LogInformation(
                     "Inventory item created for ProductId {ProductId}. EventId {EventId}.",

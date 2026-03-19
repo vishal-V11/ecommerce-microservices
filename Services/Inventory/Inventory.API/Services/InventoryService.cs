@@ -1,4 +1,5 @@
-﻿using Inventory.API.Entities;
+﻿using Inventory.API.DTO;
+using Inventory.API.Entities;
 using Inventory.API.Exceptions;
 using Inventory.API.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -38,24 +39,6 @@ namespace Inventory.API.Services
             _logger.LogInformation("Added {Qty} units to ProductId {ProductId}.", qty, productId);
         }
 
-        public async Task LockStockAsync(Guid productId, int qty, CancellationToken ct = default)
-        {
-            await ExecuteWithRetryAsync(productId, qty, "lock", async item =>
-            {
-                item.LockStock(qty);
-                await _repository.UpdateAsync(item, ct);
-            }, ct);
-        }
-
-        public async Task ReleaseStockAsync(Guid productId, int qty, CancellationToken ct = default)
-        {
-            await ExecuteWithRetryAsync(productId, qty, "release", async item =>
-             {
-                 item.ReleaseStock(qty);
-                 await _repository.UpdateAsync(item, ct);
-             }, ct);
-        }
-
         public async Task CreateInventoryItemAsync(Guid productId, CancellationToken ct = default)
         {
             var existing = await _repository.GetByProductIdAsync(productId, ct);
@@ -70,41 +53,51 @@ namespace Inventory.API.Services
             _logger.LogInformation("Inventory item created for ProductId {ProductId}.", productId);
         }
 
-        public async Task ConfirmStockAsync(Guid productId, int qty, CancellationToken ct = default)
+
+        public async Task LockStockBatchAsync(IReadOnlyList<StockItemDto> items, CancellationToken ct = default)
         {
-            await ExecuteWithRetryAsync(productId, qty, "confirm", async item =>
-            {
-                item.ConfirmStock(qty);
-                await _repository.UpdateAsync(item, ct);
-            }, ct);
+            await ExecuteBatchWithRetryAsync(items, "lock", (item, orderItem) => item.LockStock(orderItem.Quantity), ct);
+        }
+
+        public async Task ConfirmStockBatchAsync(IReadOnlyList<StockItemDto> items, CancellationToken ct = default)
+        {
+            await ExecuteBatchWithRetryAsync(items, "confirm", (item, orderItem) => item.ConfirmStock(orderItem.Quantity), ct);
+        }
+
+        public async Task ReleaseStockBatchAsync(IReadOnlyList<StockItemDto> items, CancellationToken ct = default)
+        {
+            await ExecuteBatchWithRetryAsync(items, "release", (item, orderItem) => item.ReleaseStock(orderItem.Quantity), ct);
         }
 
         // --- Private ---
-
-        private async Task ExecuteWithRetryAsync(
-            Guid productId,
-            int qty,
+        private async Task ExecuteBatchWithRetryAsync(
+            IReadOnlyList<StockItemDto> items,
             string operation,
-            Func<InventoryItem, Task> action,
+            Action<InventoryItem, StockItemDto> action,
             CancellationToken ct)
         {
             try
             {
                 await _pipeline.ExecuteAsync(async token =>
                 {
-                    var item = await _repository.GetByProductIdAsync(productId, token)
-                        ?? throw new InventoryItemNotFoundException(productId);
+                    var inventoryItems = await _repository.GetByIdAsync(
+                        items.Select(i => i.ProductId).ToList(), token);
 
-                    await action(item);
+                    foreach (var orderItem in items)
+                    {
+                        var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == orderItem.ProductId)
+                            ?? throw new InventoryItemNotFoundException(orderItem.ProductId);
+
+                        action(inventoryItem, orderItem);
+                    }
+
+                    await _repository.SaveChangesAsync(token);
                 }, ct);
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.LogError(ex,
-                    "Failed to {Operation} stock for ProductId {ProductId} after all retry attempts.",
-                    operation, productId);
-
-                throw new InsufficientStockException(productId, qty, 0);
+                _logger.LogError(ex, "Failed to {Operation} stock batch after all retry attempts.", operation);
+                throw;
             }
         }
 

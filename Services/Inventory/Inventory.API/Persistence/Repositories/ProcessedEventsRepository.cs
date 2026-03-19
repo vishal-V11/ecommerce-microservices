@@ -2,7 +2,7 @@
 using Inventory.API.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Inventory.API.Persistence
+namespace Inventory.API.Persistence.Repositories
 {
     public class ProcessedEventsRepository : IProcessedEventsRepository
     {

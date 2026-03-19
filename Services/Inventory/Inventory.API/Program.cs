@@ -1,6 +1,7 @@
 using Inventory.API.Consumers;
 using Inventory.API.Interfaces;
 using Inventory.API.Persistence;
+using Inventory.API.Persistence.Repositories;
 using Inventory.API.Services;
 using Inventory.API.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ builder.Services.AddResiliencePipeline("inventory-stock", (pipelineBuilder,conte
             // Only retry on concurrency conflicts
 
             ShouldHandle = new PredicateBuilder()
-                .Handle<DBConcurrencyException>(),
+                .Handle<DbUpdateConcurrencyException>(),
 
             // Max 3 retries (4 total attempts)
             MaxRetryAttempts = 3,
@@ -72,6 +73,9 @@ builder.Services.AddResiliencePipeline("inventory-stock", (pipelineBuilder,conte
 
 //Kafka Consumer
 builder.Services.AddHostedService<ProductCreatedConsumer>();
+builder.Services.AddHostedService<StockLockRequestedConsumer>();
+builder.Services.AddHostedService<StockConfirmConsumer>();
+builder.Services.AddHostedService<StockReleaseConsumer>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -79,6 +83,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Auto-migrate on startup
+using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

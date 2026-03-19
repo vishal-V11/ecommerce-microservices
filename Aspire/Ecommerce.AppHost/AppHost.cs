@@ -20,4 +20,7 @@ builder.AddProject<Projects.Cart_API>("cart-api");
 builder.AddProject<Projects.Ordering_API>("ordering-api")
                     .WithReference(kafka);
 
+builder.AddProject<Projects.Payment_API>("payment-api")
+                    .WithReference(kafka);
+
 builder.Build().Run();

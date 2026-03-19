@@ -1,5 +1,4 @@
 ﻿using Cart.Domain.Exceptions;
-using System.Linq.Expressions;
 
 namespace Cart.API.Middleware
 {
@@ -7,11 +6,15 @@ namespace Cart.API.Middleware
     {
         private readonly ILogger<ExceptionHandlingMiddleware> _logger;
         private readonly RequestDelegate _next;
+        private readonly IHostEnvironment _environment;
 
-        public ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger, RequestDelegate next)
+        public ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger,
+            RequestDelegate next, 
+            IHostEnvironment environment)
         {
             _logger = logger;
             _next = next;
+            _environment = environment;
         }
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -29,7 +32,10 @@ namespace Cart.API.Middleware
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var response = new ErrorResponse();
+            var response = new ErrorResponse()
+            {
+                TraceId = context.TraceIdentifier,
+            };
 
             context.Response.ContentType = "application/json";
 
@@ -51,8 +57,17 @@ namespace Cart.API.Middleware
                 default:
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     response.StatusCode = StatusCodes.Status500InternalServerError;
-                    response.Error = "Something went wrong.";
                     response.Message = "Internal server error";
+
+                    // Only include detailed error in development
+                    response.Error = _environment.IsDevelopment()
+                        ? exception.Message
+                        : "An error occurred while processing your request";
+
+                    if (_environment.IsDevelopment())
+                    {
+                        response.StackTrace = exception.StackTrace;
+                    }
                     break;
             }
         }
@@ -65,7 +80,8 @@ namespace Cart.API.Middleware
             public string Message { get; set; } = string.Empty;
 
             public string? Error { get; set; }
-
+            public string? StackTrace { get; set; }
+            public string TraceId { get; set; } = string.Empty;
             public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
 
 

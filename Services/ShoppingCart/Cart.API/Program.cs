@@ -3,6 +3,7 @@ using Cart.API.Middleware;
 using Cart.Application;
 using Cart.Application.Abstractions;
 using Cart.Infrastructure;
+using Cart.Infrastructure.Consumer;
 using Cart.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -38,17 +39,31 @@ try
     builder.Services.AddInfraStructure();
 
     //Redis Configuration
-    builder.Services.Configure<RedisSettings>(options =>
-    {
-        options.ConnectionString =
-            builder.Configuration.GetConnectionString("redis")!;
-    });
+    builder.Services.AddOptions<RedisSettings>()
+    .BindConfiguration("redis")
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+    //builder.Services.Configure<RedisSettings>(options =>
+    //{
+    //    options.ConnectionString =
+    //        builder.Configuration.GetConnectionString("redis")!;
+    //});
+
+    builder.Services
+        .AddOptions<KafkaSettings>()
+        .BindConfiguration("kafka")
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
 
     //Add Authentication
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
+
+            options.SaveToken = true;
+            options.RequireHttpsMetadata = false;       //Only for development
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -71,6 +86,8 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IUserContext, UserContext>();
     builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
+
+    builder.Services.AddHostedService<CartClearConsumer>();
 
     var app = builder.Build();
 

@@ -53,7 +53,6 @@ Each step is a Kafka event. The saga handles all state transitions and compensat
 
 | Area | Detail |
 |---|---|
-| 🔲 **Identity Service** | Authentication + Authorization via ASP.NET Core Identity |
 | 🔲 **API Gateway** | Routing, rate limiting |
 | 🔲 **Health Checks** | Per-service `/health` endpoints with Kafka, Postgres, Redis checks |
 | 🔲 **OpenTelemetry** | Distributed tracing across services with `CorrelationId` propagation |

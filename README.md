@@ -30,7 +30,7 @@ Each step is a Kafka event. The saga handles all state transitions and compensat
 | **Inventory** | Repository Pattern | EF Core, Postgres, Polly Retry, Optimistic Concurrency |
 | **Cart** | Clean Architecture + CQS | MediatR, Redis |
 | **Payment** | Repository Pattern | EF Core, Postgres, Configurable Failure Simulation |
-| **Identity** | — | ASP.NET Core Identity 🔲 Planned |
+| **Identity** | Repository Pattern | EF Core, ASP.NET Core Identity, Postgres |
 | **Notification** | — | 🔲 Planned — SendGrid |
 | **API Gateway** | — | 🔲 Planned |
 

@@ -7,6 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\..\Shared\Shared.Messaging\Shared.Messaging.csproj" />
 		<ProjectReference Include="..\Cart.Application\Cart.Application.csproj" />
 		<ProjectReference Include="..\Cart.Domain\Cart.Domain.csproj" />
 	</ItemGroup>

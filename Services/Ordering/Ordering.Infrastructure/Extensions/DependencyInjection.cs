@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Ordering.Application.Abstractions;
 using Ordering.Infrastructure.Messaging;
 using Ordering.Infrastructure.Persistence;
@@ -16,10 +17,22 @@ namespace Ordering.Infrastructure.Extensions
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services,DatabaseOptions dbOptions, KafkaOptions kafkaOptions)
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
-            services.AddDbContext<OrderDbContext>(options =>
-                 options.UseNpgsql(dbOptions.Postgres).UseSnakeCaseNamingConvention());
+            services.AddDbContext<OrderDbContext>((sp,options) =>
+            {
+                var dbOptions = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+                options.UseNpgsql(dbOptions.Postgres,
+                    npgsqlOptions =>
+                    {
+                        npgsqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorCodesToAdd: null);
+                    }
+                )
+                .UseSnakeCaseNamingConvention();
+            });
 
             services.AddScoped<IOrderRepository, OrderRepository>();
 
@@ -27,24 +40,28 @@ namespace Ordering.Infrastructure.Extensions
 
             services.AddMassTransit(x =>
             {
-                x.AddSagaStateMachine<OrderSaga, OrderSagaState>()
+                x.AddSagaStateMachine<OrderSagaMachine, OrderSagaState>()
                  .EntityFrameworkRepository(r =>
                  {
                      r.ConcurrencyMode = ConcurrencyMode.Optimistic;
-                     r.AddDbContext<DbContext, OrderDbContext>((service,options) =>
+                     r.AddDbContext<DbContext, OrderDbContext>((sp, options) =>
+                     {
+                         var dbOptions = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
                          options.UseNpgsql(dbOptions.Postgres)
-                                .UseSnakeCaseNamingConvention());
+                                .UseSnakeCaseNamingConvention();
+                     });
                  });
 
                 x.UsingInMemory();
 
                 x.AddRider(rider =>
                 {
-                    rider.AddSaga<OrderSagaState>();
+                    rider.AddSagaStateMachine<OrderSagaMachine, OrderSagaState>();
 
                     rider.UsingKafka((ctx, k) =>
                     {
-                        k.Host(kafkaOptions.BootstrapServers);
+                        var kafkaSettings = ctx.GetRequiredService<IOptions<KafkaOptions>>().Value;
+                        k.Host(kafkaSettings.BootstrapServers);
 
                         // Bootstraps Saga instance when a new order is placed
                         k.TopicEndpoint<OrderCreatedEvent>(

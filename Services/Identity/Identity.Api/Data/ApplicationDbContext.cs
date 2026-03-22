@@ -15,6 +15,7 @@ namespace Identity.Api.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<RefreshToken>()
                 .HasIndex(r => r.TokenHash)
                 .IsUnique();

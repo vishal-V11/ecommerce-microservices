@@ -23,7 +23,7 @@ namespace Inventory.API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_inventory_items", x => x.product_id);
+                    table.PrimaryKey("pk_inventory_items", x => x.product_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -31,11 +31,12 @@ namespace Inventory.API.Migrations
                 columns: table => new
                 {
                     event_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    event_type = table.Column<string>(type: "text", nullable: false),
                     processed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_processed_events", x => x.event_id);
+                    table.PrimaryKey("pk_processed_events", x => x.event_id);
                 });
         }
 

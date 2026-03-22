@@ -1,9 +1,6 @@
-﻿using Confluent.Kafka;
-using Inventory.API.DTO;
+﻿using Inventory.API.DTO;
 using Inventory.API.Interfaces;
-using Inventory.API.Persistence.Repositories;
-using Inventory.API.Settings;
-using Microsoft.Extensions.Options;
+using Inventory.API.Messaging;
 using Shared.Messaging.Constants;
 using Shared.Messaging.Events.Stock;
 using System.Text.Json;
@@ -18,35 +15,24 @@ namespace Inventory.API.Consumers
     {
         private readonly ILogger<StockConfirmConsumer> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly KafkaSettings _kafkaSettings;
+        private readonly KafkaFactory _kafkaFactory;
 
         public StockConfirmConsumer(ILogger<StockConfirmConsumer> logger,
             IServiceScopeFactory scopeFactory,
-            IOptions<KafkaSettings> options
+            KafkaFactory kafkaFactory
+            
             )
         {
             _logger = logger;
             _scopeFactory = scopeFactory;
-            _kafkaSettings = options.Value;
+            _kafkaFactory = kafkaFactory;
         }
 
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var consumerConfig = new ConsumerConfig()
-            {
-                BootstrapServers = _kafkaSettings.BootstrapServers,
-                GroupId = KafkaGroups.InventoryService,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = false
-            };
 
-            var producerConfig = new ProducerConfig()
-            {
-                BootstrapServers = _kafkaSettings.BootstrapServers
-            };
-
-            using var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
+            using var consumer = _kafkaFactory.CreateConsumer(KafkaGroups.InventoryService);
 
             consumer.Subscribe(KafkaTopics.StockConfirm);
 

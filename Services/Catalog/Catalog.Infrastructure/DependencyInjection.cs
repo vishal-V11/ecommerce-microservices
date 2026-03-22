@@ -1,10 +1,14 @@
 ﻿using Catalog.Application.Abstractions;
 using Catalog.Infrastructure.Background;
+using Catalog.Infrastructure.Messaging;
+using Catalog.Infrastructure.Messaging.Producers;
 using Catalog.Infrastructure.Persistence.Mongo;
 using Catalog.Infrastructure.Persistence.Mongo.DbSeeder;
+using Catalog.Infrastructure.Persistence.Mongo.Repositories;
 using Catalog.Infrastructure.Persistence.Repositories;
 using Catalog.Infrastructure.Services;
 using Catalog.Infrastructure.Settings;
+using Confluent.Kafka;
 using DnsClient.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -31,8 +35,15 @@ namespace Catalog.Infrastructure
 
             services.AddScoped<DatabaseSeeder>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IBrandRepository, BrandRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductReadRepository, ProductReadRepository>();
             services.AddScoped<IOutboxRepository, OutboxRepository>();
+
+            // DI handles the factory itself
+            services.AddSingleton<KafkaFactory>();
+            services.AddScoped<IIntegrationEventPublisher, KafkaIntegrationEventPublisher>();
 
             //Polly Resiliance Pipeline
             services.AddResiliencePipeline("kafka-publish-pipeline", (pipelineBuilder, context) =>

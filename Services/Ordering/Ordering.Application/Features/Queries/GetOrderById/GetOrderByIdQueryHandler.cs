@@ -2,7 +2,6 @@
 using Ordering.Application.Abstractions;
 using Ordering.Application.Common.DTOs;
 using Ordering.Domain.Exceptions;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Ordering.Application.Features.Queries.GetOrderById
 {

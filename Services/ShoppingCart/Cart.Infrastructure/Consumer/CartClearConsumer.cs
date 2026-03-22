@@ -1,10 +1,8 @@
 ﻿using Cart.Application.Abstractions;
-using Cart.Infrastructure.Settings;
-using Confluent.Kafka;
+using Cart.Infrastructure.Mesagging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Shared.Messaging.Constants;
 using Shared.Messaging.Events.Cart;
 using StackExchange.Redis;
@@ -17,7 +15,8 @@ namespace Cart.Infrastructure.Consumer
         private readonly ILogger<CartClearConsumer> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConnectionMultiplexer _redis;
-        private readonly KafkaSettings _kafkaSettings;
+        private readonly KafkaFactory _kafkaFactory;
+
 
         private const string IdempotencyKeyPrefix = "processed:";
         private static readonly TimeSpan IdempotencyTtl = TimeSpan.FromDays(7);
@@ -25,25 +24,18 @@ namespace Cart.Infrastructure.Consumer
         public CartClearConsumer(ILogger<CartClearConsumer> logger,
             IServiceScopeFactory scopeFactory,
             IConnectionMultiplexer redis,
-            IOptions<KafkaSettings> kafkaOptions)
+            KafkaFactory kafkaFactory)
         {
             _logger = logger;
             _scopeFactory = scopeFactory;
             _redis = redis;
-            _kafkaSettings = kafkaOptions.Value;
+            _kafkaFactory = kafkaFactory;
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var consumerConfig = new ConsumerConfig()
-            {
-                BootstrapServers = _kafkaSettings.BootstrapServers,
-                GroupId = KafkaGroups.CartService,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = false
-            };
+            using var consumer = _kafkaFactory.CreateConsumer(KafkaGroups.CartService);
 
-            using var consumer = new ConsumerBuilder<string,string>(consumerConfig).Build();
             consumer.Subscribe(KafkaTopics.CartClear);
 
             _logger.LogInformation("CartClearConsumer started.");
@@ -97,7 +89,7 @@ namespace Cart.Infrastructure.Consumer
                 {
 
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Unhandled error processing CartClearEvent.");
                 }

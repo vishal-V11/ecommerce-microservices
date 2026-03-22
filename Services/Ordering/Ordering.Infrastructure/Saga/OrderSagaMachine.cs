@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Ordering.Application.Abstractions;
 using Shared.Messaging.Events.Cart;
 using Shared.Messaging.Events.Notification;
@@ -21,9 +22,9 @@ namespace Ordering.Infrastructure.Saga
     ///         → PaymentFailed → StockRelease + Notify → Cancelled <br/>
     ///     → StockLockFailed → Notify → Cancelled
     /// </summary>
-    public sealed class OrderSaga : MassTransitStateMachine<OrderSagaState>
+    public sealed class OrderSagaMachine : MassTransitStateMachine<OrderSagaState>
     {
-        private readonly IOrderRepository _orderRepository;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         /// <summary>
         /// Saga is waiting for Inventory Service to respond with
@@ -80,9 +81,9 @@ namespace Ordering.Infrastructure.Saga
         /// </summary>
         public Event<PaymentFailedEvent> PaymentFailed { get; private set; } = default!;
 
-        public OrderSaga(IOrderRepository orderRepository)
+        public OrderSagaMachine(IServiceScopeFactory scopeFactory)
         {
-            _orderRepository = orderRepository;
+            _scopeFactory = scopeFactory;
 
             // Tells MassTransit which property on OrderSagaState holds the current state string
             InstanceState(x => x.CurrentState);
@@ -150,10 +151,13 @@ namespace Ordering.Infrastructure.Saga
                 When(StockLockFailed)
                     .ThenAsync(async ctx =>
                     {
+                        using var scope = _scopeFactory.CreateScope();
+                        var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+
                         // Cancel the Order aggregate in Postgres
                         var order = await orderRepository.GetByIdAsync(ctx.Saga.OrderId, CancellationToken.None);
                         order!.CancelStatus();
-                        await _orderRepository.SaveChangesAsync(CancellationToken.None);
+                        await orderRepository.SaveChangesAsync(CancellationToken.None);
                     })
                     .Publish(ctx => new SendNotificationEvent(
                       CorrelationId: ctx.Saga.CorrelationId,
@@ -174,10 +178,12 @@ namespace Ordering.Infrastructure.Saga
                 When(PaymentSucceeded)
                     .ThenAsync(async ctx =>
                     {
+                        using var scope = _scopeFactory.CreateScope();
+                        var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
                         // Confirm the Order aggregate — transitions status to Confirmed
-                        var order = await _orderRepository.GetByIdAsync(ctx.Saga.OrderId, CancellationToken.None);
+                        var order = await orderRepository.GetByIdAsync(ctx.Saga.OrderId, CancellationToken.None);
                         order!.ConfirmStatus();
-                        await _orderRepository.SaveChangesAsync(CancellationToken.None);
+                        await orderRepository.SaveChangesAsync(CancellationToken.None);
                     })
 
                     // Tells Inventory to convert ReservedQty into actual deduction
@@ -207,6 +213,9 @@ namespace Ordering.Infrastructure.Saga
                 When(PaymentFailed)
                 .ThenAsync(async ctx =>
                 {
+                    using var scope = _scopeFactory.CreateScope();
+                    var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+
                     // Cancel the Order aggregate in Postgres
                     var order = await orderRepository.GetByIdAsync(ctx.Saga.OrderId, CancellationToken.None);
                     order!.CancelStatus();

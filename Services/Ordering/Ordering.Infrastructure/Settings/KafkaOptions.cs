@@ -4,9 +4,8 @@ namespace Ordering.Infrastructure.Settings
 {
     public class KafkaOptions
     {
-        public const string SectionName = "kafka";
 
         [Required]
-        public string BootstrapServers { get; init; } = default!;
+        public string BootstrapServers { get; set; } = default!;
     }
 }

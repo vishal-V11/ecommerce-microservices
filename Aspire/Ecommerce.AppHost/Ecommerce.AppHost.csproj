@@ -11,11 +11,14 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Kafka" Version="13.1.1" />
     <PackageReference Include="Aspire.Hosting.MongoDB" Version="13.1.2" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.3" />
     <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Services\Catalog\Catalog.API\Catalog.API.csproj" />
+    <ProjectReference Include="..\..\Services\Identity\Identity.Api\Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Services\Inventory\Inventory.API\Inventory.API.csproj" />
     <ProjectReference Include="..\..\Services\Ordering\Ordering.API\Ordering.API.csproj" />
     <ProjectReference Include="..\..\Services\Payment\Payment.API\Payment.API.csproj" />
     <ProjectReference Include="..\..\Services\ShoppingCart\Cart.API\Cart.API.csproj" />

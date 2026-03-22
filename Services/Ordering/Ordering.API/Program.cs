@@ -16,25 +16,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// API reads ALL config
-builder.Services.AddOptions<DatabaseOptions>()
-    .BindConfiguration(DatabaseOptions.SectionName)
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
 
-builder.Services.AddOptions<KafkaOptions>()
-    .BindConfiguration(KafkaOptions.SectionName)
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+builder.Services.Configure<KafkaOptions>(options =>
+{
+    options.BootstrapServers = 
+        builder.Configuration.GetConnectionString("kafka")!;
+});
 
-// Resolve and pass down to Infrastructure
-var dbOptions = builder.Configuration
-    .GetSection(DatabaseOptions.SectionName)
-    .Get<DatabaseOptions>()!;
-
-var kafkaOptions = builder.Configuration
-    .GetSection(KafkaOptions.SectionName)
-    .Get<KafkaOptions>()!;
+builder.Services.Configure<DatabaseOptions>(options =>
+{
+    options.Postgres =
+        builder.Configuration.GetConnectionString("orderDb")!;
+});
 
 //Jwt Authentication setup 
 builder.Services
@@ -68,7 +61,7 @@ builder.Services.AddScoped<IUserContext, UserContext>();
 builder.Services.AddApplication();
 
 //Infrastructure Dependency
-builder.Services.AddInfrastructure(dbOptions, kafkaOptions);
+builder.Services.AddInfrastructure();
 
 
 var app = builder.Build();
@@ -83,6 +76,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//For testing pupose only in production need to add a legit cors policy
+app.UseCors(x =>
+{
+    x.AllowAnyHeader();
+    x.AllowAnyMethod();
+    x.AllowAnyOrigin();
+});
+
+//Enbale the Useforward header middleware pipeline
+app.UseForwardedHeaders();
 
 app.UseHttpsRedirection();
 

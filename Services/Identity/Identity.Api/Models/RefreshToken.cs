@@ -7,6 +7,7 @@ namespace Identity.Api.Models
 {
     public class RefreshToken
     {
+        [Key]
         public int Id { get; set; }
 
         //Store HASH of refresh token only

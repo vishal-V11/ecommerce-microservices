@@ -1,18 +1,17 @@
-using Identity.Api.Infrastructure;
-using Identity.Api.Repository;
-using Identity.Api.Settings;
 using Identity.Api.Data;
+using Identity.Api.Infrastructure;
+using Identity.Api.Interface;
 using Identity.Api.Middleware;
 using Identity.Api.Models;
-using Identity.Api.Repository;
+using Identity.Api.Persistence.Repository;
+using Identity.Api.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using Microsoft.AspNetCore.HttpOverrides;
 
 //Setting the Logger configurations
 Log.Logger = new LoggerConfiguration()
@@ -32,8 +31,18 @@ try
     
 
     //DbContext Service Registertation
-    string ConnectionString = builder.Configuration.GetConnectionString("IdentityConnection")! ;
-    builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(ConnectionString));
+    builder.Services.AddDbContext<ApplicationDbContext>(options => 
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("identityDb"),
+            npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorCodesToAdd: null);
+            })
+            .UseSnakeCaseNamingConvention()
+        );
 
     //Identity Configuration
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -75,7 +84,7 @@ try
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings.Issuer,
+            ValidIssuer = jwtSettings!.Issuer,
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
         };
@@ -112,12 +121,22 @@ try
 
     });
 
+    builder.Services.AddCors();
+
     builder.Services.AddAuthorization();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.AddHttpContextAccessor();
 
     var app = builder.Build();
+
+
+    // Auto-migrate on startup
+    using (var scope = app.Services.CreateAsyncScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await db.Database.MigrateAsync();
+    }
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -126,6 +145,15 @@ try
         app.UseSwaggerUI();
        
     }
+
+    //For testing purpose only
+    app.UseCors(x =>
+    {
+        
+        x.AllowAnyMethod();
+        x.AllowAnyOrigin();
+        x.AllowAnyHeader();
+    });
 
     //Enbale the Useforward header middleware pipeline
     app.UseForwardedHeaders();

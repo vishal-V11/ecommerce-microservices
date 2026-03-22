@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Net;
 
 namespace Identity.Api.Middleware
 {
@@ -29,18 +30,49 @@ namespace Identity.Api.Middleware
 
         public async Task HandleExceptionAsync(HttpContext context,Exception ex)
         {
+            var response = new ErrorResponse();
             context.Response.ContentType = "application/json";
 
-            var statusCode = ex switch
+            switch (ex)
             {
-                ArgumentException => StatusCodes.Status400BadRequest,
-                KeyNotFoundException => StatusCodes.Status404NotFound,
-                UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
-                _ => StatusCodes.Status500InternalServerError
-            };
+                case ArgumentException:
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    response.Message = "";
+                    response.Error = ex.Message;
+                    break;
+                case KeyNotFoundException:
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    response.Message = "";
+                    response.Error = ex.Message;
+                    break;
+                case UnauthorizedAccessException:
+                    response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    response.Message = "Unauthorized";
+                    response.Error = ex.Message;
+                    break;
+                default:
+                    response.StatusCode = StatusCodes.Status500InternalServerError;
+                    response.Message = "Internal server error";
+                    response.Error = "Something went wrong.";
+                    break;
+            }
 
-            context.Response.StatusCode = statusCode;
+            context.Response.StatusCode = response.StatusCode;
+            await context.Response.WriteAsJsonAsync(response);
         }
+
+
+    }
+
+    public class ErrorResponse
+    {
+        public int StatusCode { get; set; }
+
+        public string Message { get; set; } = string.Empty;
+
+        public string? Error { get; set; }
+
+        public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
 
 
     }

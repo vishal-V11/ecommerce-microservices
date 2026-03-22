@@ -1,5 +1,6 @@
 using Inventory.API.Consumers;
 using Inventory.API.Interfaces;
+using Inventory.API.Messaging;
 using Inventory.API.Persistence;
 using Inventory.API.Persistence.Repositories;
 using Inventory.API.Services;
@@ -12,10 +13,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+//kafka Settings
+builder.Services.Configure<KafkaSettings>(options =>
+{
+    options.BootstrapServers =
+        builder.Configuration.GetConnectionString("kafka")!;
+});
 
 // EF Core
 builder.Services.AddDbContext<InventoryDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("InventoryDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("inventoryDb"),
+
+      npgsqlOptions =>
+      {
+          npgsqlOptions.EnableRetryOnFailure(
+          maxRetryCount: 5,
+          maxRetryDelay: TimeSpan.FromSeconds(10),
+          errorCodesToAdd: null);
+      })
+    .UseSnakeCaseNamingConvention()
+    );
 
 //Services
 builder.Services.AddScoped<IInventoryService, InventoryService>();
@@ -24,12 +41,8 @@ builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IProcessedEventsRepository, ProcessedEventsRepository>();
 
-//kafka Settings
-builder.Services.Configure<KafkaSettings>(options =>
-{
-    options.BootstrapServers =
-        builder.Configuration.GetConnectionString("kafka")!;
-});
+//kafka 
+builder.Services.AddSingleton<KafkaFactory>();
 
 //Polly resiliance pipeline
 builder.Services.AddResiliencePipeline("inventory-stock", (pipelineBuilder,context) =>
@@ -82,6 +95,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors();
+
 var app = builder.Build();
 
 // Auto-migrate on startup
@@ -97,6 +112,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(x =>
+{
+    x.AllowAnyHeader();
+    x.AllowAnyMethod();
+    x.AllowAnyOrigin();
+});
+
+//Enbale the Useforward header middleware pipeline
+app.UseForwardedHeaders();
 
 app.UseHttpsRedirection();
 

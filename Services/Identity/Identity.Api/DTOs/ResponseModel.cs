@@ -35,4 +35,34 @@
                 StatusCode = statusCode
             };
     }
+
+    public class Response
+    {
+        public bool Succeeded { get; set; }
+
+        /// <summary>
+        /// The response message you want to set 
+        /// </summary>
+        public string? Message { get; set; }
+        public string? Error { get; set; }
+        public int StatusCode { get; set; }
+
+        // Factory methods for convenience
+        public static Response Success(string? message = null, int statusCode = 200)
+            => new Response
+            {
+                Succeeded = true,
+                Message = message,
+                StatusCode = statusCode
+            };
+
+        public static Response Fail(string? errorMessage, string? message = null, int statusCode = 400)
+            => new Response
+            {
+                Succeeded = false,
+                Error = errorMessage,
+                Message = message,
+                StatusCode = statusCode
+            };
+    }
 }

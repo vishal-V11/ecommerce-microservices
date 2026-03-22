@@ -2,12 +2,8 @@
 using Inventory.API.DTO;
 using Inventory.API.Exceptions;
 using Inventory.API.Interfaces;
-using Inventory.API.Persistence.Repositories;
-using Inventory.API.Settings;
+using Inventory.API.Messaging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Options;
-using Polly.Registry;
 using Shared.Messaging.Constants;
 using Shared.Messaging.Events.Stock;
 using System.Text.Json;
@@ -21,35 +17,21 @@ namespace Inventory.API.Consumers
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<StockLockRequestedConsumer> _logger;
-        private readonly KafkaSettings _kafkaSettings;
+        private readonly KafkaFactory _kafkaFactory;
         public StockLockRequestedConsumer(IServiceScopeFactory scopeFactory,
             ILogger<StockLockRequestedConsumer> logger,
-            ResiliencePipelineProvider<string> pipelineProvider,
-            IOptions<KafkaSettings> options
+            KafkaFactory kafkaFactory
             )
         {
             _logger = logger;
             _scopeFactory = scopeFactory;
-            _kafkaSettings = options.Value;
+            _kafkaFactory = kafkaFactory;
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var consumerConfig = new ConsumerConfig
-            {
-                BootstrapServers = _kafkaSettings.BootstrapServers,
-                GroupId = KafkaGroups.InventoryService,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = false
-            };
-
-            var producerConfig = new ProducerConfig
-            {
-                BootstrapServers = _kafkaSettings.BootstrapServers
-            };
-
-            using var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-            using var producer = new ProducerBuilder<string, string>(producerConfig).Build();
+            using var consumer = _kafkaFactory.CreateConsumer(KafkaGroups.InventoryService);
+            var producer = _kafkaFactory.CreateProducer();
 
             consumer.Subscribe(KafkaTopics.StockLockRequested);
 

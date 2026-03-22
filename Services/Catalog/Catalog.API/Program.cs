@@ -5,7 +5,6 @@ using Catalog.API.Settings;
 using Catalog.Application;
 using Catalog.Application.Abstractions;
 using Catalog.Infrastructure;
-using Catalog.Infrastructure.Messaging.Producers.Kafka;
 using Catalog.Infrastructure.Persistence.Mongo.DbSeeder;
 using Catalog.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -38,9 +37,16 @@ try
     builder.Services.AddSwaggerGen();
 
 
-    var connectionString = builder.Configuration.GetConnectionString("mongo");
-    builder.Services.Configure<MongoSettings>(
-        builder.Configuration.GetSection("Mongo"));
+    builder.Services.AddOptions<MongoSettings>()
+    .Configure(options =>
+    {
+        options.ConnectionString =
+            builder.Configuration.GetConnectionString("mongo")!;
+
+        options.DatabaseName =
+            builder.Configuration["Mongo:DatabaseName"]!;
+    })
+    .ValidateOnStart();
 
     //Jwt Settings Configure
     builder.Services.Configure<JwtSettings>(
@@ -95,6 +101,8 @@ try
     builder.Services.AddScoped<IUserContext, UserContext>();
     builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
 
+    builder.Services.AddCors();
+
     var app = builder.Build();
 
 
@@ -111,6 +119,16 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    app.UseCors(x =>
+    {
+        x.AllowAnyHeader();
+        x.AllowAnyMethod();
+        x.AllowAnyOrigin();
+    });
+
+    //Enbale the Useforward header middleware pipeline
+    app.UseForwardedHeaders();
 
     app.UseHttpsRedirection();
 

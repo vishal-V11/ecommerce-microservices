@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using Microsoft.Extensions.Options;
 using Payment.API.Abstraction;
+using Payment.API.Messaging;
 using Payment.API.Settings;
 using Shared.Messaging.Constants;
 using Shared.Messaging.Events.Payment;
@@ -11,53 +12,26 @@ namespace Payment.API.Consumers
     public class PaymentProcessRequestedConsumer : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly KafkaSettings _kafkaSettings;
+        private readonly KafkaFactory _kafkaFactory;
         private readonly PaymentSettings _paymentSettings;
         private readonly ILogger<PaymentProcessRequestedConsumer> _logger;
 
         public PaymentProcessRequestedConsumer(IServiceScopeFactory scopeFactory,
-            IOptions<KafkaSettings> options,
+            KafkaFactory kafkaFactory,
             IOptions<PaymentSettings> paymentoptions,
             ILogger<PaymentProcessRequestedConsumer> logger
             )
         {
             _scopeFactory = scopeFactory;
-            _kafkaSettings = options.Value;
+            _kafkaFactory = kafkaFactory;
             _paymentSettings = paymentoptions.Value;
             _logger = logger;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var consumerConfig = new ConsumerConfig()
-            {
-                BootstrapServers = _kafkaSettings.BootstrapServers,
 
-                // Identity of this consumer group
-                // Kafka tracks offset independently per group
-                // Multiple instances of this service share the same GroupId
-                // Kafka distributes partitions across them automatically
-                GroupId = KafkaGroups.PaymentService,
-
-                // AutoOffsetReset only matters the very first time this GroupId connects
-                // and no stored offset exists yet
-                // Earliest = start reading from the very beginning of the topic
-                // Latest = start reading only new messages from this point forward
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-
-                // We manually commit offsets after successful processing
-                // This ensures if the service crashes mid-processing
-                // Kafka will replay the message on restart — nothing gets lost
-                EnableAutoCommit = false
-
-            };
-
-            var producerConfig = new ProducerConfig()
-            {
-                BootstrapServers = _kafkaSettings.BootstrapServers
-            };
-
-            using var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-            using var producer = new ProducerBuilder<string, string>(producerConfig).Build();
+            using var consumer = _kafkaFactory.CreateConsumer(KafkaGroups.PaymentService);
+            var producer = _kafkaFactory.CreateProducer();
 
             consumer.Subscribe(KafkaTopics.PaymentProcessRequested);
 

@@ -2,6 +2,7 @@
 using Identity.Api.DTOs;
 using Identity.Api.Helpers;
 using Identity.Api.Infrastructure;
+using Identity.Api.Interface;
 using Identity.Api.Models;
 using Identity.Api.Settings;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +14,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Identity.Api.Repository
+namespace Identity.Api.Persistence.Repository
 {
     public class AuthRepository : IAuthRepository
     {
@@ -157,6 +158,7 @@ namespace Identity.Api.Repository
                                             UserEmail = x.User.Email,
                                             UserName = x.User.UserName
                                         })
+                                        .AsNoTracking()
                                         .FirstOrDefaultAsync(ct);
 
             //Case 1: Invalid refresh token
@@ -217,7 +219,7 @@ namespace Identity.Api.Repository
 
         }
 
-        public async Task<Response<object>> Logout(LogoutRequestDto dto,string authenticatedUserId, CancellationToken ct)
+        public async Task<Response> Logout(LogoutRequestDto dto,string authenticatedUserId, CancellationToken ct)
         {
             var tokenHash = TokenHasher.Hash(dto.RefreshToken);
 
@@ -231,7 +233,7 @@ namespace Identity.Api.Repository
             if (tokenData == null)
             {
                 _logger.LogWarning("Logout with unknown token. IP: {Ip}", _requestContext.IpAddress);
-                return Response<object>.Fail(errorMessage: "Invalid refresh token", statusCode: 401);
+                return Response.Fail(errorMessage: "Invalid refresh token", statusCode: 401);
             }
 
             // Case 2: Token exists but belongs to a different user — ownership violation.
@@ -243,7 +245,7 @@ namespace Identity.Api.Repository
                     "Logout ownership violation. AuthenticatedUserId: {AuthUserId}, TokenOwnerUserId: {TokenUserId}, IP: {Ip}",
                     authenticatedUserId, tokenData.UserId, _requestContext.IpAddress);
 
-                return Response<object>.Fail(
+                return Response.Fail(
                     errorMessage: "You are not authorized to revoke this token",
                     statusCode: 403);
             }
@@ -253,7 +255,7 @@ namespace Identity.Api.Repository
             if (tokenData.Revoked != null)
             {
                 _logger.LogInformation("Logout called on already-revoked token. UserId: {UserId}", authenticatedUserId);
-                return Response<object>.Success(data: null, message: "Already logged out", statusCode: 200);
+                return Response.Success(message: "Already logged out", statusCode: 200);
             }
 
             //Revoke the refresh token 
@@ -261,7 +263,7 @@ namespace Identity.Api.Repository
 
             _logger.LogInformation("User logged out successfully. UserId: {UserId}, Device: {Device}",
                 authenticatedUserId, tokenData.Device);
-            return Response<object>.Success(data: null, message: "Logged out successfully", statusCode: 200);
+            return Response.Success(message: "Logged out successfully", statusCode: 200);
 
         }
 

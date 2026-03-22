@@ -4,18 +4,18 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text;
 
-namespace Catalog.Infrastructure.Messaging.Producers.Kafka
+namespace Catalog.Infrastructure.Messaging.Producers
 {
     public class KafkaIntegrationEventPublisher : IIntegrationEventPublisher
     {
-        private readonly IProducer<string, string> _producer;
+        private readonly KafkaFactory _kafkaFactory;
         private readonly ILogger<KafkaIntegrationEventPublisher> _logger;
 
         public KafkaIntegrationEventPublisher(
-            IProducer<string, string> producer,
+           KafkaFactory kafkaFactory,
             ILogger<KafkaIntegrationEventPublisher> logger)
         {
-            _producer = producer;
+            _kafkaFactory = kafkaFactory;
             _logger = logger;
         }
 
@@ -47,7 +47,9 @@ namespace Catalog.Infrastructure.Messaging.Producers.Kafka
                     }
                 }
 
-                var result = await _producer.ProduceAsync(
+                var kafkaProducer = _kafkaFactory.CreateProducer();
+
+                var result = await kafkaProducer.ProduceAsync(
                     topic,
                     message,
                     cancellationToken);

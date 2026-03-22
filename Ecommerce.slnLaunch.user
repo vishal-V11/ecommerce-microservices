@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Aspire\\Ecommerce.AppHost\\Ecommerce.AppHost.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Services\\Catalog\\Catalog.API\\Catalog.API.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

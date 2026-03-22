@@ -51,7 +51,8 @@ namespace Inventory.API.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("version");
 
-                    b.HasKey("ProductId");
+                    b.HasKey("ProductId")
+                        .HasName("pk_inventory_items");
 
                     b.ToTable("inventory_items", (string)null);
                 });
@@ -71,7 +72,8 @@ namespace Inventory.API.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("processed_at");
 
-                    b.HasKey("EventId");
+                    b.HasKey("EventId")
+                        .HasName("pk_processed_events");
 
                     b.ToTable("processed_events", (string)null);
                 });

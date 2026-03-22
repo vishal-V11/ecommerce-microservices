@@ -1,4 +1,5 @@
 ﻿using Cart.Application.Abstractions;
+using Cart.Infrastructure.Mesagging;
 using Cart.Infrastructure.Repositories;
 using Cart.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ namespace Cart.Infrastructure
                 return ConnectionMultiplexer.Connect(settings.ConnectionString);
             });
 
+            services.AddSingleton<KafkaFactory>();
             services.AddScoped<ICartRepository, CartRepository>();
             return services;
         }

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Inventory.API.Migrations
 {
     [DbContext(typeof(InventoryDbContext))]
-    [Migration("20260317075451_EventTypeProccessEvent")]
-    partial class EventTypeProccessEvent
+    [Migration("20260322200211_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,7 +54,8 @@ namespace Inventory.API.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("version");
 
-                    b.HasKey("ProductId");
+                    b.HasKey("ProductId")
+                        .HasName("pk_inventory_items");
 
                     b.ToTable("inventory_items", (string)null);
                 });
@@ -74,7 +75,8 @@ namespace Inventory.API.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("processed_at");
 
-                    b.HasKey("EventId");
+                    b.HasKey("EventId")
+                        .HasName("pk_processed_events");
 
                     b.ToTable("processed_events", (string)null);
                 });

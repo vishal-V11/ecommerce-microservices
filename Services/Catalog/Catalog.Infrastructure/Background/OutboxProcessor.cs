@@ -39,7 +39,7 @@ namespace Catalog.Infrastructure.Background
 
         private async Task ProcessBatchAsync(CancellationToken ct)
         {
-            using var scope = _scopeFactory.CreateScope();
+            using var scope = _scopeFactory.CreateAsyncScope();
 
             var outboxRepository = scope.ServiceProvider.GetRequiredService<IOutboxRepository>();
             var publisher = scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>();

@@ -1,8 +1,6 @@
-﻿using Confluent.Kafka;
-using Inventory.API.DTO;
+﻿using Inventory.API.DTO;
 using Inventory.API.Interfaces;
-using Inventory.API.Settings;
-using Microsoft.Extensions.Options;
+using Inventory.API.Messaging;
 using Shared.Messaging.Constants;
 using Shared.Messaging.Events.Stock;
 using System.Text.Json;
@@ -16,28 +14,20 @@ namespace Inventory.API.Consumers
     {
         private readonly ILogger<StockReleaseConsumer> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly KafkaSettings _KafkaSettings;
+        private readonly KafkaFactory _kafkaFactory;
         public StockReleaseConsumer(ILogger<StockReleaseConsumer> logger,
             IServiceScopeFactory scopeFactory,
-            IOptions<KafkaSettings> options
+            KafkaFactory kafkaFactory
             )
         {
             _logger = logger;
             _scopeFactory = scopeFactory;
-            _KafkaSettings = options.Value;
+            _kafkaFactory = kafkaFactory;
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var consumerConfig = new ConsumerConfig()
-            {
-                BootstrapServers = _KafkaSettings.BootstrapServers,
-                GroupId = KafkaGroups.InventoryService,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = false
-            };
-
-            using var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
+            using var consumer = _kafkaFactory.CreateConsumer(KafkaGroups.InventoryService);
 
             consumer.Subscribe(KafkaTopics.StockRelease);
             _logger.LogInformation("StockReleaseConsumer started.");

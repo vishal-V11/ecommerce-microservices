@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Catalog.Infrastructure.Messaging.Producers.Kafka
+namespace Catalog.Infrastructure.Settings
 {
     public class KafkaSettings
     {

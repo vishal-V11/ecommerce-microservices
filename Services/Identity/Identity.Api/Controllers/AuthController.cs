@@ -1,5 +1,5 @@
 ﻿using Identity.Api.DTOs;
-using Identity.Api.Repository;
+using Identity.Api.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

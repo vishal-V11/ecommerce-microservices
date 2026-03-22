@@ -1,8 +1,6 @@
 ﻿using Identity.Api.DTOs;
-using Identity.Api.Models;
-using Microsoft.AspNetCore.Identity;
 
-namespace Identity.Api.Repository
+namespace Identity.Api.Interface
 {
     public interface IAuthRepository
     {
@@ -38,6 +36,6 @@ namespace Identity.Api.Repository
         /// <param name="dto">Request containing the refresh token to revoke</param>
         /// <param name="authenticatedUserId">The UserId extracted from the validated JWT in the controller</param>
         /// <param name="ct">Cancellation token</param>
-        Task<Response<object>> Logout(LogoutRequestDto dto,string authenticatedUserIdUserId, CancellationToken ct);
+        Task<Response> Logout(LogoutRequestDto dto,string authenticatedUserIdUserId, CancellationToken ct);
     }
 }

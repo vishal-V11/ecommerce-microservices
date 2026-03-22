@@ -38,23 +38,18 @@ try
     //Add Infrastructure
     builder.Services.AddInfraStructure();
 
-    //Redis Configuration
-    builder.Services.AddOptions<RedisSettings>()
-    .BindConfiguration("redis")
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+    //Redis Connection
+    builder.Services.Configure<RedisSettings>(options =>
+    {
+        options.ConnectionString =
+            builder.Configuration.GetConnectionString("redis")!;
+    });
 
-    //builder.Services.Configure<RedisSettings>(options =>
-    //{
-    //    options.ConnectionString =
-    //        builder.Configuration.GetConnectionString("redis")!;
-    //});
-
-    builder.Services
-        .AddOptions<KafkaSettings>()
-        .BindConfiguration("kafka")
-        .ValidateDataAnnotations()
-        .ValidateOnStart();
+    //Kafka connection
+    builder.Services.Configure<KafkaSettings>(options =>
+    {
+        options.BootstrapServers = builder.Configuration.GetConnectionString("kafka")!;
+    });
 
     //Add Authentication
     builder.Services
@@ -89,6 +84,8 @@ try
 
     builder.Services.AddHostedService<CartClearConsumer>();
 
+    builder.Services.AddCors();
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -97,6 +94,17 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    //For testing pupose only in production need to add a legit cors policy
+    app.UseCors(x =>
+    {
+        x.AllowAnyHeader();
+        x.AllowAnyMethod();
+        x.AllowAnyOrigin();
+    });
+
+    //Enbale the Useforward header middleware pipeline
+    app.UseForwardedHeaders();
 
     app.UseHttpsRedirection();
     app.UseAuthentication();

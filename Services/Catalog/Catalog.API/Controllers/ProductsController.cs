@@ -47,7 +47,7 @@ namespace Catalog.API.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("delete/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteProduct(Guid id)
@@ -56,7 +56,7 @@ namespace Catalog.API.Controllers
             return Ok(id);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("getproductDetails/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProductById(Guid id, CancellationToken cancellationToken)
@@ -69,7 +69,7 @@ namespace Catalog.API.Controllers
         }
 
 
-        [HttpGet("getAdminProducts")]
+        [HttpGet("adminProductList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAdminProducts([FromQuery] GetProductListQuery query, CancellationToken ct)
         {

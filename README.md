@@ -2,6 +2,8 @@
 
 A production-style distributed eCommerce backend built with **.NET 8**, fully event-driven over **Kafka**, and orchestrated via **.NET Aspire**. Designed around microservices principles — each service owns its data, communicates asynchronously, and fails independently.
 
+**Follow-up Project**: [roadmap.sh/projects/scalable-ecommerce-platform](https://roadmap.sh/projects/scalable-ecommerce-platform)
+
 ---
 
 ## Order Flow
